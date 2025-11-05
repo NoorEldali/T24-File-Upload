@@ -273,7 +273,7 @@ MIT
 
 ## Author
 
-MiniMax Agent
+
 
 ---
 
