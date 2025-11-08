@@ -1,4 +1,5 @@
 const express = require('express');
+const fetch = require('node-fetch'); // add this at the top if not already imported
 const router = express.Router();
 const upload = require('../middleware/upload');
 const { validateUploadRequest } = require('../middleware/validation');
@@ -28,6 +29,28 @@ const sendToSharePoint = async (fileData, metadata) => {
     }, 500);
   });
 };
+router.get('/customer/:id', async (req, res) => {
+  const customerId = req.params.id;
+  const temenosUrl = `https://api.temenos.com/api/v5.8.0/party/customers/${customerId}`;
+
+  try {
+    const response = await fetch(temenosUrl, {
+      headers: {
+        ApiKey: process.env.API_KEY, // ← loaded securely from .env
+      },
+    });
+
+    if (!response.ok) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    const data = await response.json();
+    res.json({ name: data.customer?.name || 'Customer' });
+  } catch (err) {
+    console.error('Temenos fetch failed:', err);
+    res.status(500).json({ message: 'Failed to fetch from T24' });
+  }
+});
 
 // POST /uploadDocument endpoint
 router.post('/upload', upload.single('file'), async (req, res) => {
