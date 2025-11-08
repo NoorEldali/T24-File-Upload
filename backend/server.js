@@ -34,16 +34,91 @@ app.use((req, res, next) => {
 
 // Routes
 const documentRoutes = require('./routes/document');
+const customerRoutes = require('./routes/customers');
+const accountRoutes = require('./routes/accounts');
+const depositRoutes = require('./routes/deposits');
+const lendingRoutes = require('./routes/lending');
+const { getAccessToken } = require('./middleware/temenosClient');
+
+// Mount routes
 app.use('/api', documentRoutes);
+app.use('/api/customers', customerRoutes);
+app.use('/api/accounts', accountRoutes);
+app.use('/api/deposits', depositRoutes);
+app.use('/api/lending', lendingRoutes);
+
+// Health check with T24 token validation
+app.get('/health', async (req, res) => {
+  try {
+    await getAccessToken();
+    res.json({ ok: true, message: 'Server is running and T24 authentication is active' });
+  } catch (error) {
+    res.status(503).json({ ok: false, message: 'T24 authentication failed', error: error.message });
+  }
+});
+
+// Debug routes endpoint
+app.get('/debug/routes', (req, res) => {
+  try {
+    const postmanMap = require('./postman-map.json');
+    res.json({
+      message: 'API Route Mappings',
+      mappings: postmanMap,
+      totalRoutes: postmanMap.length
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to load route mappings' });
+  }
+});
+
+// Generic proxy endpoint for T24 API
+app.all('/api/proxy/*', async (req, res) => {
+  try {
+    const { temenosGet, temenosPost, temenosPut, temenosDelete } = require('./middleware/temenosClient');
+    const path = req.path.replace('/api/proxy', '');
+    
+    let response;
+    switch (req.method) {
+      case 'GET':
+        response = await temenosGet(path, req.query);
+        break;
+      case 'POST':
+        response = await temenosPost(path, req.body);
+        break;
+      case 'PUT':
+        response = await temenosPut(path, req.body);
+        break;
+      case 'DELETE':
+        response = await temenosDelete(path);
+        break;
+      default:
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    res.json(response.data);
+  } catch (error) {
+    console.error('Proxy error:', error.response?.data || error.message);
+    res.status(error.response?.status || 500).json(
+      error.response?.data || { error: 'Proxy request failed' }
+    );
+  }
+});
 
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'Document Upload API Server',
-    version: '1.0.0',
+    message: 'T24 Banking API Server',
+    version: '2.0.0',
     endpoints: {
-      upload: 'POST /api/uploadDocument',
-      health: 'GET /api/health'
+      health: 'GET /health',
+      debugRoutes: 'GET /debug/routes',
+      proxy: 'ALL /api/proxy/*',
+      documents: 'POST /api/uploadDocument',
+      customers: 'GET /api/customers/:id',
+      customerAccounts: 'GET /api/customers/:id/accounts',
+      accounts: 'GET /api/accounts/:id',
+      deposits: 'POST /api/deposits',
+      lending: 'POST /api/lending/loans'
     }
   });
 });

@@ -1,0 +1,77 @@
+[
+  {
+    "local": "POST /api/customers",
+    "remote": "POST /api/customers",
+    "description": "Create Customer"
+  },
+  {
+    "local": "PUT /api/customers/:id",
+    "remote": "PUT /api/customers/:id",
+    "description": "Update Customer"
+  },
+  {
+    "local": "GET /api/customers/:id",
+    "remote": "GET /api/customers/:id",
+    "description": "Get Customer"
+  },
+  {
+    "local": "GET /api/customers/:id/accounts",
+    "remote": "GET /api/accounts?customerId={id}",
+    "description": "Get Customer Accounts"
+  },
+  {
+    "local": "POST /api/accounts",
+    "remote": "POST /api/accounts",
+    "description": "Create Account"
+  },
+  {
+    "local": "POST /api/accounts/transfers",
+    "remote": "POST /api/accounts/transfers",
+    "description": "Funds Transfer"
+  },
+  {
+    "local": "GET /api/accounts/:id",
+    "remote": "GET /api/accounts/:id",
+    "description": "Get Account Details"
+  },
+  {
+    "local": "POST /api/deposits",
+    "remote": "POST /api/deposits",
+    "description": "Create Deposit Account"
+  },
+  {
+    "local": "POST /api/deposits/transfers",
+    "remote": "POST /api/deposits/transfers",
+    "description": "Deposit Transfer"
+  },
+  {
+    "local": "POST /api/deposits/redeem/:id",
+    "remote": "POST /api/deposits/redeem/:id",
+    "description": "Redeem Deposit"
+  },
+  {
+    "local": "POST /api/lending/loans",
+    "remote": "POST /api/loans",
+    "description": "Create Personal Loan"
+  },
+  {
+    "local": "GET /api/lending/loans/:id",
+    "remote": "GET /api/loans/:id",
+    "description": "Get Loan Details"
+  },
+  {
+    "local": "POST /api/lending/payment-orders",
+    "remote": "POST /api/payment-orders",
+    "description": "Create Payment Order"
+  },
+  {
+    "local": "GET /api/lending/bills/:id",
+    "remote": "GET /api/bills/:id",
+    "description": "Get Bill Details"
+  },
+  {
+    "local": "POST /api/documents",
+    "remote": "POST /api/documents",
+    "description": "Upload Document"
+  }
+]
