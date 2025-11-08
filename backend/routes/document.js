@@ -36,7 +36,7 @@ router.get('/customer/:id', async (req, res) => {
   try {
     const response = await fetch(temenosUrl, {
       headers: {
-        ApiKey: process.env.API_KEY, // ← loaded securely from .env
+        ApiKey: process.env.T24_API_KEY_HEADER, // ← USE YOUR ENV VARIABLE HERE
       },
     });
 
@@ -51,7 +51,6 @@ router.get('/customer/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch from T24' });
   }
 });
-
 // POST /uploadDocument endpoint
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
