@@ -30,55 +30,46 @@ const sendToSharePoint = async (fileData, metadata) => {
 };
 
 // POST /uploadDocument endpoint
-router.post('/uploadDocument', upload.single('file'), validateUploadRequest, async (req, res) => {
+router.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    const { customerId, documentType } = req.body;
+    const { customerId, fileType, fileInputter, timestamp, originalName } = req.body;
     const file = req.file;
-    
-    // Generate document ID
-    const documentId = `DOC-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    
-    // Prepare metadata for SharePoint
+
+    if (!file || !customerId || !fileType) {
+      return res.status(400).json({ message: 'Missing required fields or file.' });
+    }
+
     const metadata = {
+      timestamp,
       customerId,
-      documentType,
-      documentId,
-      uploadDate: new Date().toISOString()
+      fileType,
+      fileInputter,
+      originalName,
     };
-    
-    // Send to SharePoint (mock integration)
-    const sharePointResponse = await sendToSharePoint(file, metadata);
-    
-    // Log T24 integration (mock)
-    console.log('T24 Integration: Document metadata logged', {
-      documentId,
-      customerId,
-      documentType
-    });
-    
-    // Return success response
+
+    // Log or save the file + metadata
+    console.log('===========================');
+    console.log('File uploaded locally:');
+    console.log(`Original Name: ${file.originalname}`);
+    console.log(`Stored As: ${file.filename}`);
+    console.log('Metadata:', metadata);
+    console.log('===========================');
+
     res.json({
       status: 'success',
-      documentId: documentId,
       message: 'File uploaded successfully.',
-      details: {
-        filename: file.originalname,
-        size: file.size,
-        documentType: documentType,
-        customerId: customerId,
-        sharePointId: sharePointResponse.sharePointId
-      }
+      metadata,
     });
-    
-  } catch (error) {
-    console.error('Upload error:', error);
+  } catch (err) {
+    console.error('Upload failed:', err);
     res.status(500).json({
       status: 'error',
-      message: 'File upload failed',
-      error: error.message
+      message: 'Upload failed',
+      error: err.message,
     });
   }
 });
+
 
 // Health check endpoint
 router.get('/health', (req, res) => {
