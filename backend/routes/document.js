@@ -1,4 +1,5 @@
 const express = require('express');
+const fetch = require('node-fetch'); // add this at the top if not already imported
 const router = express.Router();
 const upload = require('../middleware/upload');
 const { validateUploadRequest } = require('../middleware/validation');
@@ -28,57 +29,69 @@ const sendToSharePoint = async (fileData, metadata) => {
     }, 500);
   });
 };
+router.get('/customer/:id', async (req, res) => {
+  const customerId = req.params.id;
+  const temenosUrl = `https://api.temenos.com/api/v5.8.0/party/customers/${customerId}`;
 
-// POST /uploadDocument endpoint
-router.post('/uploadDocument', upload.single('file'), validateUploadRequest, async (req, res) => {
   try {
-    const { customerId, documentType } = req.body;
-    const file = req.file;
-    
-    // Generate document ID
-    const documentId = `DOC-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    
-    // Prepare metadata for SharePoint
-    const metadata = {
-      customerId,
-      documentType,
-      documentId,
-      uploadDate: new Date().toISOString()
-    };
-    
-    // Send to SharePoint (mock integration)
-    const sharePointResponse = await sendToSharePoint(file, metadata);
-    
-    // Log T24 integration (mock)
-    console.log('T24 Integration: Document metadata logged', {
-      documentId,
-      customerId,
-      documentType
+    const response = await fetch(temenosUrl, {
+      headers: {
+        ApiKey: process.env.T24_API_KEY_HEADER, // ← USE YOUR ENV VARIABLE HERE
+      },
     });
-    
-    // Return success response
+
+    if (!response.ok) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    const data = await response.json();
+    res.json({ name: data.customer?.name || 'Customer' });
+  } catch (err) {
+    console.error('Temenos fetch failed:', err);
+    res.status(500).json({ message: 'Failed to fetch from T24' });
+  }
+});
+// POST /uploadDocument endpoint
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    const { customerId, fileType, fileInputter, timestamp, originalName } = req.body;
+    const file = req.file;
+
+    if (!file || !customerId || !fileType) {
+      return res.status(400).json({ message: 'Missing required fields or file.' });
+    }
+
+    const metadata = {
+      timestamp,
+      customerId,
+      fileType,
+      fileInputter,
+      originalName,
+    };
+
+    // Log or save the file + metadata
+    console.log('===========================');
+    console.log('File uploaded locally:');
+    console.log(`Original Name: ${file.originalname}`);
+    console.log(`Stored As: ${file.filename}`);
+    console.log('Metadata:', metadata);
+    console.log('===========================');
+
     res.json({
       status: 'success',
-      documentId: documentId,
       message: 'File uploaded successfully.',
-      details: {
-        filename: file.originalname,
-        size: file.size,
-        documentType: documentType,
-        customerId: customerId,
-        sharePointId: sharePointResponse.sharePointId
-      }
+      metadata,
     });
-    
-  } catch (error) {
-    console.error('Upload error:', error);
+  } catch (err) {
+    console.error('Upload failed:', err);
     res.status(500).json({
       status: 'error',
-      message: 'File upload failed',
-      error: error.message
+      message: 'Upload failed',
+      error: err.message,
     });
   }
 });
+
 
 // Health check endpoint
 router.get('/health', (req, res) => {
