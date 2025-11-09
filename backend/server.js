@@ -34,10 +34,10 @@ app.use((req, res, next) => {
 
 // Routes
 const documentRoutes = require('./routes/document');
-const customerRoutes = require('./routes/customers');
-const accountRoutes = require('./routes/accounts');
-const depositRoutes = require('./routes/deposits');
-const lendingRoutes = require('./routes/lending');
+//const customerRoutes = require('./routes/customers');
+//const accountRoutes = require('./routes/accounts');
+//const depositRoutes = require('./routes/deposits');
+//const lendingRoutes = require('./routes/lending');
 const { getAccessToken } = require('./middleware/temenosClient');
 
 // Mount routes
